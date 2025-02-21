@@ -1,0 +1,25 @@
+# EditorConfig is awesome: https://EditorConfig.org
+
+# top-most EditorConfig file
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+indent_size = 4
+indent_style = tab
+trim_trailing_whitespace = true
+
+[*.md]
+trim_trailing_whitespace = false
+
+[*.{sh,yml}]
+indent_size = 2
+indent_style = spaces
+
+[*.xml.dist]
+indent_style = spaces
+
+[*.{styl,scss,sass}]
+indent_size = 2
+indent_style = space
