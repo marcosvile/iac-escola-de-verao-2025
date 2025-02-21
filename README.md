@@ -90,7 +90,7 @@ sudo apt install ansible
 
 5. Execute o playbook do Ansible:
     ```bash
-    ansible-playbook -i inventories/hosts playbook.yaml
+    ansible-playbook -i inventories/hosts -u vagrant playbook.yaml
     ```
 
 ## Licença
