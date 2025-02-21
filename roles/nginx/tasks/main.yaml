@@ -1,0 +1,52 @@
+---
+- name: Instala pacotes de dependências para o NGINX
+  ansible.builtin.apt:
+    name:
+      - curl
+      - gnupg
+      - ca-certificates
+      - lsb-release
+      - ubuntu-keyring
+    update_cache: true
+
+- name: Instala NGINX
+  block:
+    - name: Importa chave de assinatura do repositório
+      ansible.builtin.apt_key:
+        url: https://nginx.org/keys/nginx_signing.key
+        keyring: /usr/share/keyrings/nginx_signing.gpg
+
+    - name: Configura repositorio do NGINX
+      ansible.builtin.apt_repository:
+        repo: "deb [arch=amd64 signed-by=/usr/share/keyrings/nginx_signing.gpg] https://nginx.org/packages/mainline/ubuntu/ {{ ansible_distribution_release }} nginx"
+        state: present
+
+    - name: Instala NGINX
+      ansible.builtin.apt:
+        name: nginx
+        state: present
+        update_cache: true
+
+- name: Configura NGINX
+  block:
+    - name: Cria diretórios de sites disponíveis
+      ansible.builtin.file:
+        state: directory
+        path: /etc/nginx/sites-available
+        mode: '0755'
+
+    - name: Cria diretórios de sites ativados
+      ansible.builtin.file:
+        state: directory
+        path: /etc/nginx/sites-enabled
+        mode: '0755'
+
+    - name: Cria diretório de configurações globais
+      ansible.builtin.file:
+        state: directory
+        path: /etc/nginx/global
+        mode: '0755'
+
+- name: Configura NGINX
+  import_tasks: tasks/configure.yaml
+

@@ -1,0 +1,19 @@
+---
+- name: Configura NGINX (nginx.conf)
+  ansible.builtin.template:
+    src: "nginx.conf"
+    dest: "/etc/nginx/nginx.conf"
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Copia arquivos de configurações globais do NGINX
+  ansible.builtin.template:
+    src: "global/{{ item }}"
+    dest: "/etc/nginx/global/{{ item }}"
+    owner: root
+    group: root
+    mode: '0644'
+  loop:
+    - client-ip.conf
+  notify: Inicia o NGINX
