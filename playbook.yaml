@@ -1,0 +1,6 @@
+---
+- name: Playbook
+  hosts: webserver
+  become: true
+  roles:
+    - nginx
