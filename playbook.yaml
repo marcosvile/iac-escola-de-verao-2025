@@ -1,6 +1,20 @@
 ---
-- name: Playbook
-  hosts: webserver
+- hosts: webserver
   become: true
-  roles:
-    - nginx
+  vars:
+    pacotes:
+      - apache2
+      - vim
+      - tree
+      - btop
+
+  tasks:
+    - name: Atualizar cache do APT
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Instalar pacotes
+      apt:
+        name: "{{ pacotes }}"
+        state: present
