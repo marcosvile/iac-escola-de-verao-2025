@@ -1,6 +1,6 @@
 server {
     listen 80;
-    server_name _
+    server_name {{ wordpress_domain }};
 
     root {{ wordpress_dir }};
     index index.php index.html index.htm;
