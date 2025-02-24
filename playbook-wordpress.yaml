@@ -1,0 +1,155 @@
+---
+- hosts: webserver
+  become: true
+  vars:
+    php_version: 8.4
+    ubuntu_packages:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - software-properties-common
+      - pip
+    nginx_packages:
+      - nginx
+    php_packages:
+      - php{{ php_version }}
+      - php{{ php_version }}-cli
+      - php{{ php_version }}-common
+      - php{{ php_version }}-curl
+      - php{{ php_version }}-fpm
+      - php{{ php_version }}-opcache
+      - php{{ php_version }}-pdo
+      - php{{ php_version }}-mysql
+      - php{{ php_version }}-xml
+      - php{{ php_version }}-intl
+      - php{{ php_version }}-mbstring
+      - php{{ php_version }}-zip
+      - php{{ php_version }}-imagick
+      - php{{ php_version }}-imap
+    mysql_packages:
+      - mysql-server
+      - mysql-client
+    pip_packages:
+      - PyMySQL
+
+    wordpress_version: latest
+    wordpress_download_url: "https://wordpress.org/wordpress-{{ wordpress_version }}.tar.gz"
+    wordpress_dir: /var/www/wordpress
+
+  tasks:
+    - name: Carregar variáveis do arquivo .env
+      include_vars:
+        file: .env
+        name: env_vars
+
+    - name: Define as variáveis de ambiente
+      ansible.builtin.set_fact:
+        wordpress_db_name: "{{ env_vars.WORDPRESS_DB_NAME }}"
+        wordpress_db_user: "{{ env_vars.WORDPRESS_DB_USER }}"
+        wordpress_db_password: "{{ env_vars.WORDPRESS_DB_PASSWORD }}"
+        login_password: "{{ env_vars.MYSQL_ROOT_PASSWORD }}"
+
+    - name: Atualizar cache do APT
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Instala pacotes Linux
+      apt:
+        name: "{{ ubuntu_packages }}"
+        state: present
+
+    - name: Instalar pacotes do Nginx
+      apt:
+        name: "{{ nginx_packages }}"
+        state: present
+
+    - name: Instala pacotes PIP
+      pip:
+        name: "{{ pip_packages }}"
+        state: present
+
+    - name: Adiciona repositório PHP
+      ansible.builtin.apt_repository:
+        repo: 'ppa:ondrej/php'
+        state: present
+
+    - name: Instalar pacotes do PHP-FPM
+      apt:
+        name: "{{ php_packages }}"
+        state: present
+
+    - name: Instalar pacotes do MySQL
+      apt:
+        name: "{{ mysql_packages }}"
+        state: present
+
+    - name: Garantir que o diretório do WordPress exista
+      file:
+        path: "{{ wordpress_dir }}"
+        state: directory
+        owner: www-data
+        group: www-data
+        recurse: yes
+
+    - name: Baixar o WordPress
+      get_url:
+        url: "{{ wordpress_download_url }}"
+        dest: /tmp/wordpress.tar.gz
+
+    - name: Descompactar o WordPress
+      unarchive:
+        src: /tmp/wordpress.tar.gz
+        dest: "{{ wordpress_dir }}"
+        remote_src: yes
+        owner: www-data
+        group: www-data
+        extra_opts: [--strip-components=1]
+
+    - name: Configurar arquivo wp-config.php
+      template:
+        src: templates/wp-config.php.j2
+        dest: "{{ wordpress_dir }}/wp-config.php"
+        owner: www-data
+        group: www-data
+      notify: restart php-fpm
+
+    - name: Configurar arquivo de configuração do Nginx
+      template:
+        src: templates/nginx.conf.j2
+        dest: /etc/nginx/sites-available/wordpress
+      notify: restart nginx
+
+    - name: Criar banco de dados WordPress
+      mysql_db:
+        name: "{{ wordpress_db_name }}"
+        state: present
+        login_user: root
+        login_password: "{{ login_password }}"
+
+    - name: Criar usuário do banco de dados WordPress
+      mysql_user:
+        name: "{{ env_vars.WORDPRESS_DB_USER }}"
+        password: "{{ env_vars.WORDPRESS_DB_PASSWORD }}"
+        priv: "{{ env_vars.WORDPRESS_DB_NAME }}.*:ALL"
+        state: present
+        login_user: root
+        login_password: "{{ login_password }}"
+
+    - name: Habilitar site do Nginx
+      file:
+        src: /etc/nginx/sites-available/wordpress
+        dest: /etc/nginx/sites-enabled/wordpress
+        state: link
+      notify: restart nginx
+
+  handlers:
+    - name: restart nginx
+      service:
+        name: nginx
+        state: restarted
+
+    - name: restart php-fpm
+      service:
+        name: php-fpm
+        state: restarted

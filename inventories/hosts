@@ -1,2 +1,2 @@
 [webserver]
-IP address
+192.168.3.111 ansible_python_interpreter=/usr/bin/python3

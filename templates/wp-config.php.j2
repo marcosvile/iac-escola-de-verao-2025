@@ -1,0 +1,80 @@
+<?php
+/**
+ * As configurações básicas do WordPress.
+ *
+ * Este arquivo contém as seguintes configurações: configurações de MySQL, Prefixo de tabelas,
+ * Chaves secretas do Secret e idioma do WordPress.
+ * Você poderá obter mais informações visitando
+ * {@link http://codex.wordpress.org/Editing_wp-config.php Editing wp-config.php}
+ *
+ * Este arquivo é usado pelo script de instalação do WordPress para criar o
+ * arquivo wp-config.php durante a instalação. Você não precisa usar o navegador,
+ * você pode simplesmente renomear este arquivo para "wp-config.php" e preencher os valores.
+ *
+ * @package WordPress
+ */
+
+// ** Configurações do MySQL - Você pode pegar estas informações com o serviço de hospedagem ** //
+/** O nome do banco de dados do WordPress */
+define('DB_NAME', '{{ wordpress_db_name }}');
+
+/** Usuário do banco de dados do WordPress */
+define('DB_USER', '{{ wordpress_db_user }}');
+
+/** Senha do banco de dados do WordPress */
+define('DB_PASSWORD', '{{ wordpress_db_password }}');
+
+/** Nome do host do MySQL */
+define('DB_HOST', 'localhost');
+
+/** Conjunto de caracteres do banco de dados para uso na criação de tabelas. */
+define('DB_CHARSET', 'utf8');
+
+/** O tipo de collate do banco de dados. Não altere isso se tiver dúvidas. */
+define('DB_COLLATE', '');
+
+/**#@+
+ * Chaves únicas de autenticação e salts.
+ *
+ * Altere cada chave para um frase única!
+ * Você pode gerá-las usando o {@link https://api.wordpress.org/secret-key/1.1/salt/ WordPress.org secret-key service}
+ * Você pode alterar estes a qualquer momento para invalidar quaisquer cookies existentes. Isto irá forçar todos os usuários a fazerem login novamente.
+ *
+ * @since 2.6.0
+ */
+define('AUTH_KEY',         '{{ "gerar_chave_unica" | password_hash("sha512") }}');
+define('SECURE_AUTH_KEY',  '{{ "gerar_chave_unica" | password_hash("sha512") }}');
+define('LOGGED_IN_KEY',    '{{ "gerar_chave_unica" | password_hash("sha512") }}');
+define('NONCE_KEY',        '{{ "gerar_chave_unica" | password_hash("sha512") }}');
+define('AUTH_SALT',        '{{ "gerar_chave_unica" | password_hash("sha512") }}');
+define('SECURE_AUTH_SALT', '{{ "gerar_chave_unica" | password_hash("sha512") }}');
+define('LOGGED_IN_SALT',   '{{ "gerar_chave_unica" | password_hash("sha512") }}');
+define('NONCE_SALT',       '{{ "gerar_chave_unica" | password_hash("sha512") }}');
+
+/**#@-*/
+
+/**
+ * Prefixo de tabelas do WordPress.
+ *
+ * Você pode ter várias instalações em um único banco de dados se você der para cada instalação um
+ * prefixo único. Somente números, letras e sublinhados!
+ */
+$table_prefix  = 'wp_';
+
+/**
+ * Para desenvolvedores: Modo de debug do WordPress.
+ *
+ * Altere isto para true para ativar a exibição de avisos durante o desenvolvimento.
+ * É altamente recomendado que os desenvolvedores de plugins e temas usem o WP_DEBUG
+ * em seus ambientes de desenvolvimento.
+ */
+define('WP_DEBUG', false);
+
+/* Isto é tudo, pare de editar! Boa publicação. */
+
+/** Caminho absoluto para o diretório WordPress. */
+if ( !defined('ABSPATH') )
+        define('ABSPATH', dirname(__FILE__) . '/');
+
+/** Configura as variáveis do WordPress e arquivos inclusos. */
+require_once(ABSPATH . 'wp-settings.php');
