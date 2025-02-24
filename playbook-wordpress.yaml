@@ -8,7 +8,7 @@
       - ca-certificates
       - curl
       - software-properties-common
-      - pip
+      - python3-pip
     nginx_packages:
       - nginx
     php_packages:
@@ -26,15 +26,16 @@
       - php{{ php_version }}-zip
       - php{{ php_version }}-imagick
       - php{{ php_version }}-imap
-    mysql_packages:
-      - mysql-server
-      - mysql-client
+    mariadb_packages:
+      - mariadb-server
+      - python3-mysqldb
     pip_packages:
       - PyMySQL
 
     wordpress_version: latest
     wordpress_download_url: "https://wordpress.org/wordpress-{{ wordpress_version }}.tar.gz"
     wordpress_dir: /var/www/wordpress
+    wordpress_domain: "{{ ansible_host }}"
 
   tasks:
     - name: Carregar variáveis do arquivo .env
@@ -54,7 +55,7 @@
         update_cache: yes
         cache_valid_time: 3600
 
-    - name: Instala pacotes Linux
+    - name: Instalar pacotes Linux
       apt:
         name: "{{ ubuntu_packages }}"
         state: present
@@ -64,12 +65,12 @@
         name: "{{ nginx_packages }}"
         state: present
 
-    - name: Instala pacotes PIP
+    - name: Instalar pacotes PIP
       pip:
         name: "{{ pip_packages }}"
         state: present
 
-    - name: Adiciona repositório PHP
+    - name: Adicionar repositório PHP
       ansible.builtin.apt_repository:
         repo: 'ppa:ondrej/php'
         state: present
@@ -79,10 +80,15 @@
         name: "{{ php_packages }}"
         state: present
 
-    - name: Instalar pacotes do MySQL
+    - name: Instalar pacotes do MariaDB
       apt:
-        name: "{{ mysql_packages }}"
+        name: "{{ mariadb_packages }}"
         state: present
+
+    - name: Iniciar o MariaDB
+      service:
+        name: mariadb
+        state: started
 
     - name: Garantir que o diretório do WordPress exista
       file:
@@ -114,27 +120,21 @@
         group: www-data
       notify: restart php-fpm
 
+    - name: Criar banco de dados WordPress
+      shell: |
+       mysql -u root -p{{ login_password }} -e "CREATE DATABASE IF NOT EXISTS {{ wordpress_db_name }};"
+
+    - name: Criar usuário do banco de dados WordPress
+      shell: |
+       mysql -u root -p{{ login_password }} -e "CREATE USER IF NOT EXISTS '{{ env_vars.WORDPRESS_DB_USER }}'@'localhost' IDENTIFIED BY '{{ env_vars.WORDPRESS_DB_PASSWORD }}';"
+       mysql -u root -p{{ login_password }} -e "GRANT ALL PRIVILEGES ON {{ env_vars.WORDPRESS_DB_NAME }}.* TO '{{ env_vars.WORDPRESS_DB_USER }}'@'localhost';"
+       mysql -u root -p{{ login_password }} -e "FLUSH PRIVILEGES;"
+
     - name: Configurar arquivo de configuração do Nginx
       template:
         src: templates/nginx.conf.j2
         dest: /etc/nginx/sites-available/wordpress
       notify: restart nginx
-
-    - name: Criar banco de dados WordPress
-      mysql_db:
-        name: "{{ wordpress_db_name }}"
-        state: present
-        login_user: root
-        login_password: "{{ login_password }}"
-
-    - name: Criar usuário do banco de dados WordPress
-      mysql_user:
-        name: "{{ env_vars.WORDPRESS_DB_USER }}"
-        password: "{{ env_vars.WORDPRESS_DB_PASSWORD }}"
-        priv: "{{ env_vars.WORDPRESS_DB_NAME }}.*:ALL"
-        state: present
-        login_user: root
-        login_password: "{{ login_password }}"
 
     - name: Habilitar site do Nginx
       file:
@@ -151,5 +151,5 @@
 
     - name: restart php-fpm
       service:
-        name: php-fpm
+        name: php8.4-fpm
         state: restarted
