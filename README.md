@@ -83,12 +83,18 @@ sudo apt install ansible
     ```
     Substitua `IP address` pelo endereço IP desejado e `interface de rede` pela interface de rede a ser utilizada como bridge. O IP Address deve ser um IP da mesma rede que sua máquina host.
 
-4. Inicie a VM com Vagrant:
+4. Faça uma cópia do arquivo `.env.example` para `.env` e edite-o com suas configurações:
+    ```bash
+    cp .env.example .env
+    nano .env
+    ```
+
+5. Inicie a VM com Vagrant:
     ```bash
     vagrant up
     ```
 
-5. Execute o playbook do Ansible:
+6. Execute o playbook do Ansible:
     ```bash
     ansible-playbook -i inventories/hosts -u vagrant playbook.yaml
     ```
