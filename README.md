@@ -67,7 +67,7 @@ sudo apt install ansible
 
 1. Clone o repositório:
     ```bash
-    git clone <URL_DO_REPOSITORIO>
+    git clone https://github.com/marcosvile/iac-escola-de-verao-2025.git
     cd iac-escola-de-verao-2025
     ```
 
