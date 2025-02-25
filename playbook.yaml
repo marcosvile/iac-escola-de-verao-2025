@@ -3,7 +3,6 @@
   become: true
   vars:
     pacotes:
-      - apache2
       - vim
       - tree
       - btop
